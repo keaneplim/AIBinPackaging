@@ -1,4 +1,4 @@
-from .data_structures import Item, Container, State
+from data_structures import Item, Container, State
 
 def generate_initial_state(items: list[Item], container_capacity: int) -> State:
     """Generates an initial state using the First Fit heuristic."""
@@ -6,14 +6,14 @@ def generate_initial_state(items: list[Item], container_capacity: int) -> State:
 
     for item in items:
         placed = False
-        # Tempatkan item di container yang sudah ada
+        # Try to place in an existing container
         for container in state:
             if container.remaining_capacity() >= item.size:
                 container.add_item(item)
                 placed = True
                 break
         
-        # Jika tidak dapat ditempatkan, buat container baru
+        # If it could not be placed, create a new container
         if not placed:
             new_container = Container(container_capacity)
             new_container.add_item(item)
