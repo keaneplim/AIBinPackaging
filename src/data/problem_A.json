@@ -1,0 +1,8 @@
+{
+  "kapasitas_kontainer": 100,
+  "barang": [
+    { "id": "BRG001", "ukuran": 40, "tipe": "elektronik", "rapuh": true },
+    { "id": "BRG002", "ukuran": 55, "tipe": "pakaian" },
+    { "id": "BRG003", "ukuran": 25, "tipe": "buku" }
+  ]
+}

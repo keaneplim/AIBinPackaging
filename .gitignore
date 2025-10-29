@@ -1,0 +1,16 @@
+# Compilation files
+__pycache__/
+*.pyc
+*.$py.class
+cache
+
+
+# Hasil eksekusi dan analisis
+/src/results/
+
+# Direktori cache internal
+/cache/
+
+# File OS
+.DS_Store
+Thumbs.db
