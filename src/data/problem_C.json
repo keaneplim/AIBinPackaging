@@ -1,20 +1,20 @@
 {
   "kapasitas_kontainer": 80,
   "barang": [
-    { "id": "BRG201", "ukuran": 60, "tipe": "elektronik", "rapuh": true },
-    { "id": "BRG202", "ukuran": 55, "tipe": "makanan" },
-    { "id": "BRG203", "ukuran": 50, "tipe": "kimia" },
-    { "id": "BRG204", "ukuran": 45, "tipe": "pakaian" },
-    { "id": "BRG205", "ukuran": 40, "tipe": "buku", "rapuh": true },
-    { "id": "BRG206", "ukuran": 35, "tipe": "perabot" },
-    { "id": "BRG207", "ukuran": 30, "tipe": "obat" },
-    { "id": "BRG208", "ukuran": 28, "tipe": "pakaian" },
-    { "id": "BRG209", "ukuran": 26, "tipe": "makanan" },
-    { "id": "BRG210", "ukuran": 22, "tipe": "elektronik" },
-    { "id": "BRG211", "ukuran": 18, "tipe": "kimia" },
-    { "id": "BRG212", "ukuran": 15, "tipe": "pakaian" },
-    { "id": "BRG213", "ukuran": 12, "tipe": "buku" },
-    { "id": "BRG214", "ukuran": 10, "tipe": "obat" },
-    { "id": "BRG215", "ukuran": 8, "tipe": "perabot" }
+    {"id": "BRG124", "ukuran": 30, "tipe": "obat"},
+    {"id": "BRG820", "ukuran": 60, "tipe": "elektronik", "rapuh": true},
+    {"id": "BRG815", "ukuran": 18, "tipe": "kimia"},
+    {"id": "BRG491", "ukuran": 26, "tipe": "makanan"},
+    {"id": "BRG512", "ukuran": 35, "tipe": "perabot"},
+    {"id": "BRG029", "ukuran": 45, "tipe": "pakaian"},
+    {"id": "BRG194", "ukuran": 8, "tipe": "perabot"},
+    {"id": "BRG300", "ukuran": 22, "tipe": "elektronik"},
+    {"id": "BRG666", "ukuran": 12, "tipe": "buku"},
+    {"id": "BRG558", "ukuran": 10, "tipe": "obat"},
+    {"id": "BRG760", "ukuran": 40, "tipe": "buku", "rapuh": true},
+    {"id": "BRG371", "ukuran": 15, "tipe": "pakaian"},
+    {"id": "BRG019", "ukuran": 55, "tipe": "makanan"},
+    {"id": "BRG842", "ukuran": 28, "tipe": "pakaian"},
+    {"id": "BRG825", "ukuran": 50, "tipe": "kimia"}
   ]
 }
