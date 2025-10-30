@@ -47,6 +47,9 @@ def steepest_ascent_hill_climbing(
             current_score = best_neighbor_score
             score_history.append(current_score)
         else:
+            # Tandai bahwa satu iterasi terjadi tanpa peningkatan dengan menambahkan skor yang sama
+            # Ini akan membuat plot menunjukkan garis datar alih-alih hanya satu titik.
+            score_history.append(current_score)
             break
             
     return current_state, score_history
@@ -92,6 +95,8 @@ def stochastic_hill_climbing(
             current_score = chosen_score
             score_history.append(current_score)
         else:
+            # Tandai bahwa satu iterasi terjadi tanpa peningkatan.
+            score_history.append(current_score)
             break
             
     return current_state, score_history
@@ -142,8 +147,12 @@ def hill_climbing_with_sideways_moves(
             sideways_moves_count = 0
         elif best_neighbor_score == current_score and sideways_moves_count < max_sideways_moves:
             current_state = best_neighbor
+            # Catat skor untuk menunjukkan iterasi terjadi, meskipun skornya sama.
+            score_history.append(current_score)
             sideways_moves_count += 1
         else:
+            # Tandai akhir pencarian.
+            score_history.append(current_score)
             break
             
     return current_state, score_history
@@ -159,14 +168,15 @@ def random_restart_hill_climbing(
     """
     Mengimplementasikan Random-Restart Hill Climbing.
 
-    Algoritma ini menjalankan Steepest Ascent Hill Climbing beberapa kali (`num_restarts`).
-    Setiap restart dimulai dari sebuah keadaan awal yang dibuat secara acak.
-    Solusi terbaik yang ditemukan dari semua restart akan menjadi hasil akhir.
+    Algoritma ini menjalankan Steepest Ascent Hill Climbing beberapa kali. Pencarian
+    pertama dijalankan pada `initial_state`, kemudian sisanya (`num_restarts`) 
+    dimulai dari keadaan awal yang dibuat secara acak. Solusi terbaik yang 
+    ditemukan dari semua proses pencarian akan menjadi hasil akhir.
 
     Args:
-        initial_state: Digunakan untuk mengekstrak daftar barang dan kapasitas.
+        initial_state: Keadaan awal untuk memulai pencarian pertama.
         config: Konfigurasi untuk fungsi objektif.
-        num_restarts: Berapa kali pencarian akan diulang dari awal.
+        num_restarts: Berapa kali pencarian akan diulang dari awal (setelah pencarian awal).
         max_iter_per_restart: Jumlah iterasi maksimum untuk setiap proses Hill Climbing.
         rng: Generator angka acak untuk pembuatan state.
         kapasitas_kontainer: Kapasitas kontainer (opsional).
@@ -175,9 +185,15 @@ def random_restart_hill_climbing(
         Tuple berisi (keadaan terbaik yang ditemukan, histori skor dari pencarian terbaik).
     """
     rng = rng or random.Random()
-    best_state_overall = initial_state.salin()
-    best_score_overall = calculate_objective(best_state_overall, config)
-    best_history = [best_score_overall]
+
+    # Jalankan pencarian pertama pada state awal yang diberikan
+    print("  Running initial search on the provided start state...")
+    best_state_overall, best_history = steepest_ascent_hill_climbing(
+        initial_state=initial_state,
+        config=config,
+        max_iter=max_iter_per_restart
+    )
+    best_score_overall = best_history[-1] if best_history else float('inf')
 
     all_items = extract_all_items(initial_state)
     if not all_items:
@@ -185,6 +201,7 @@ def random_restart_hill_climbing(
         
     kapasitas = resolve_capacity(initial_state, kapasitas_kontainer)
 
+    # Jalankan restart sejumlah num_restarts
     for i in range(num_restarts):
         print(f"  Restarting search ({i + 1}/{num_restarts})...")
         random_start_state = generate_random_state(all_items, kapasitas, rng)
@@ -194,8 +211,14 @@ def random_restart_hill_climbing(
             config=config,
             max_iter=max_iter_per_restart
         )
+        
+        # Lewati jika restart ini tidak menghasilkan apa-apa
+        if not current_history:
+            continue
+
         current_best_score = current_history[-1]
 
+        # Perbarui jika ditemukan solusi yang lebih baik secara keseluruhan
         if current_best_score < best_score_overall:
             best_score_overall = current_best_score
             best_state_overall = current_best_state

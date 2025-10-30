@@ -6,7 +6,8 @@ import csv
 import os
 from datetime import datetime
 from typing import List, Optional
-from src.core.data_structures import State, Kontainer
+
+from src.core.data_structures import State
 from src.core.initial_state import generate_ffd_state, generate_random_state
 from src.core.objective_function import ObjectiveConfig, calculate_objective
 from src.utils.file_parser import parse_problem
@@ -18,7 +19,7 @@ from src.algorithms.hill_climbing import (
     hill_climbing_with_sideways_moves,
     random_restart_hill_climbing
 )
-
+from src.visualization.plot_generator import plot_progress, plot_sa_extra
 
 def print_state_summary(state: State, title: str):
     """Mencetak ringkasan keadaan (solusi) ke konsol."""
@@ -61,11 +62,15 @@ def main():
 
     args = parser.parse_args()
 
-    # Pengaturan File CSV
-    results_dir = os.path.join("src", "results", "csv")
-    os.makedirs(results_dir, exist_ok=True)
-    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-    csv_filename = os.path.join(results_dir, f"results_{timestamp_str}.csv")
+    # Pengaturan Direktori Hasil
+    base_results_dir = os.path.join("src", "results")
+    csv_dir = os.path.join(base_results_dir, "csv")
+    plots_dir = os.path.join(base_results_dir, "plots")
+    os.makedirs(csv_dir, exist_ok=True)
+    os.makedirs(plots_dir, exist_ok=True)
+    
+    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    csv_filename = os.path.join(csv_dir, f"results_{run_timestamp}.csv")
 
     csv_header = [
         'timestamp', 'algorithm', 'hc_variant', 'data_file', 'run_id', 'initial_state_method',
@@ -78,7 +83,8 @@ def main():
         writer = csv.writer(f)
         writer.writerow(csv_header)
 
-    print(f"Menyimpan hasil ke: {csv_filename}")
+    print(f"Menyimpan hasil CSV ke: {csv_filename}")
+    # --------------------------
 
     # Konfigurasi Fungsi Objektif
     obj_config = ObjectiveConfig(
@@ -86,7 +92,7 @@ def main():
         use_incompatible_constraint=args.enable_incompatible
     )
 
-    # Baca data problem
+    # Baca Data Masalah
     try:
         items, container_capacity = parse_problem(args.data_file)
     except FileNotFoundError:
@@ -95,14 +101,14 @@ def main():
 
     # Jalankan Eksperimen
     for i in range(args.run_count):
-        print(f"\n================ RUN {i + 1} / {args.run_count} ================")
+        run_id = i + 1
+        print(f"\n================ RUN {run_id} / {args.run_count} ================")
         
-        # Pilih metode pembuatan state awal
         rng_for_initial_state = random.Random(args.seed) if args.seed is not None else random.Random()
         if args.initial_state_method == 'random':
             keadaan_awal = generate_random_state(items, container_capacity, rng_for_initial_state)
             method_name = "Acak"
-        else: # Default ke ffd
+        else:
             keadaan_awal = generate_ffd_state(items, container_capacity)
             method_name = "FFD"
 
@@ -112,6 +118,7 @@ def main():
 
         start_time = time.time()
         rng = random.Random(args.seed) if args.seed is not None else None
+        histori_skor: List[float] = []
         histori_probabilitas: Optional[List[float]] = None
         iterations = 0
 
@@ -120,6 +127,7 @@ def main():
             full_algo_name = f"hc_{args.hc_variant}"
 
         if args.algoritma == 'sa':
+            print(f"\nMenjalankan Simulated Annealing...")
             keadaan_akhir, histori_skor, histori_probabilitas = simulated_annealing(
                 keadaan_awal=keadaan_awal,
                 suhu_awal=args.suhu_awal,
@@ -127,7 +135,7 @@ def main():
                 max_iter=args.max_iter,
                 config=obj_config
             )
-            iterations = len(histori_skor) -1
+            iterations = len(histori_skor) - 1
         elif args.algoritma == 'hc':
             print(f"\nMenjalankan Hill Climbing (Varian: {args.hc_variant})...")
             if args.hc_variant == 'steepest':
@@ -151,12 +159,9 @@ def main():
                     rng=rng,
                     kapasitas_kontainer=container_capacity
                 )
-            else:
-                print(f"Error: Varian Hill Climbing '{args.hc_variant}' tidak dikenal.")
-                return
             iterations = len(histori_skor) - 1
-
         elif args.algoritma == 'ga':
+            print(f"\nMenjalankan Genetic Algorithm...")
             max_generasi = args.max_generasi if args.max_generasi is not None else args.max_iter
             keadaan_akhir, histori_skor = genetic_algorithm(
                 initial_state=keadaan_awal,
@@ -172,26 +177,26 @@ def main():
             )
             iterations = len(histori_skor) - 1
         else:
-            print(f"Algoritma '{args.algoritma}' tidak dikenal.")
+            print(f"Error: Algoritma '{args.algoritma}' tidak dikenal.")
             return
             
         end_time = time.time()
         durasi = end_time - start_time
-
         skor_akhir = calculate_objective(keadaan_akhir, obj_config)
+
         print_state_summary(keadaan_akhir, f"Keadaan Akhir ({full_algo_name.upper()})")
         print(f"Skor Akhir: {skor_akhir:.2f}")
         print(f"Durasi Eksekusi: {durasi:.4f} detik")
 
-        # Simpan hasil ke CSV
+        # Simpan Hasil ke CSV
         with open(csv_filename, 'a', newline='') as f:
             writer = csv.writer(f)
             row_data = [
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"), full_algo_name, args.hc_variant if args.algoritma == 'hc' else 'N/A',
-                os.path.basename(args.data_file), i + 1, args.initial_state_method, f"{skor_awal:.4f}", f"{skor_akhir:.4f}",
+                os.path.basename(args.data_file), run_id, args.initial_state_method, f"{skor_awal:.4f}", f"{skor_akhir:.4f}",
                 f"{durasi:.4f}", iterations, len(keadaan_awal.kontainer_list), len(keadaan_akhir.kontainer_list),
                 args.enable_fragile, args.enable_incompatible, args.seed,
-                args.max_iter if args.algoritma != 'ga' else args.max_generasi, 
+                args.max_iter if args.algoritma != 'ga' else max_generasi, 
                 args.populasi_size if args.algoritma == 'ga' else 'N/A', 
                 args.crossover_rate if args.algoritma == 'ga' else 'N/A',
                 args.mutation_rate if args.algoritma == 'ga' else 'N/A',
@@ -203,6 +208,25 @@ def main():
                 args.num_restarts if args.algoritma == 'hc' and args.hc_variant == 'random_restart' else 'N/A'
             ]
             writer.writerow(row_data)
+
+        # Buat dan Simpan Plot
+        plot_filename_base = f"{full_algo_name}_{os.path.splitext(os.path.basename(args.data_file))[0]}_run{run_id}_{run_timestamp}.png"
+        plot_title = f"Progres Skor: {full_algo_name.upper()} pada {os.path.basename(args.data_file)} (Run {run_id})"
+
+        if args.algoritma == 'sa' and histori_probabilitas:
+            plot_sa_extra(
+                score_history=histori_skor,
+                prob_history=histori_probabilitas,
+                title=plot_title,
+                filename=plot_filename_base
+            )
+        else:
+            plot_progress(
+                score_history=histori_skor,
+                title=plot_title,
+                filename=plot_filename_base,
+                algorithm_name=full_algo_name.upper()
+            )
 
 if __name__ == "__main__":
     main()
