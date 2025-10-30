@@ -1,0 +1,21 @@
+{
+  "kapasitas_kontainer": 120,
+  "barang": [
+    {"id": "BRG947", "ukuran": 70, "tipe": "elektronik"},
+    {"id": "BRG762", "ukuran": 55, "tipe": "obat"},
+    {"id": "BRG014", "ukuran": 60, "tipe": "makanan"},
+    {"id": "BRG834", "ukuran": 85, "tipe": "buku"},
+    {"id": "BRG675", "ukuran": 48, "tipe": "elektronik"},
+    {"id": "BRG416", "ukuran": 42, "tipe": "buku"},
+    {"id": "BRG490", "ukuran": 58, "tipe": "perabot"},
+    {"id": "BRG040", "ukuran": 95, "tipe": "makanan"},
+    {"id": "BRG475", "ukuran": 68, "tipe": "kimia"},
+    {"id": "BRG674", "ukuran": 66, "tipe": "pakaian"},
+    {"id": "BRG246", "ukuran": 24, "tipe": "pakaian"},
+    {"id": "BRG635", "ukuran": 90, "tipe": "pakaian"},
+    {"id": "BRG503", "ukuran": 45, "tipe": "pakaian"},
+    {"id": "BRG079", "ukuran": 20, "tipe": "elektronik"},
+    {"id": "BRG921", "ukuran": 30, "tipe": "makanan"},
+    {"id": "BRG790", "ukuran": 52, "tipe": "kimia"}
+  ]
+}
