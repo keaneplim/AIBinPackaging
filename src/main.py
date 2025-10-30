@@ -1,4 +1,5 @@
 
+import sys
 import argparse
 import random
 import time
@@ -102,7 +103,67 @@ def main():
     # Jalankan Eksperimen
     for i in range(args.run_count):
         run_id = i + 1
-        print(f"\n================ RUN {run_id} / {args.run_count} ================")
+
+        # CLI Logging
+        logs_dir = os.path.join(base_results_dir, "logs")
+        os.makedirs(logs_dir, exist_ok=True)
+        original_stdout = sys.stdout 
+        log_file_handler = None
+
+        # String Nama File dan Judul
+        param_parts = [args.initial_state_method]
+        if args.algoritma == 'sa':
+            param_parts.append(f"temp{args.suhu_awal}")
+            param_parts.append(f"cool{args.cooling_rate}")
+        elif args.algoritma == 'ga':
+            max_generasi = args.max_generasi if args.max_generasi is not None else args.max_iter
+            param_parts.append(f"pop{args.populasi_size}")
+            param_parts.append(f"gen{max_generasi}")
+        elif args.algoritma == 'hc':
+            if args.hc_variant == 'sideways':
+                param_parts.append(f"sideways{args.max_sideways_moves}")
+            elif args.hc_variant == 'random_restart':
+                param_parts.append(f"restarts{args.num_restarts}")
+
+        if args.enable_fragile:
+            param_parts.append('fragile')
+        if args.enable_incompatible:
+            param_parts.append('incomp')
+
+        param_string_for_filename = "_".join(param_parts)
+        param_string_for_title = ", ".join(param_parts)
+
+        # Pengalihan stdout ke File Log
+        full_algo_name_for_log = args.algoritma if args.algoritma != 'hc' else f"hc_{args.hc_variant}"
+        log_filename = f"log_{full_algo_name_for_log}_{os.path.splitext(os.path.basename(args.data_file))[0]}_{param_string_for_filename}_run{run_id}_{run_timestamp}.txt"
+        log_filepath = os.path.join(logs_dir, log_filename)
+        
+        print(f"\nRUN {run_id}/{args.run_count}: Menyimpan output CLI ke {log_filepath}", file=original_stdout)
+        
+        log_file_handler = open(log_filepath, 'w')
+        sys.stdout = log_file_handler
+
+        print(f"================ RUN {run_id} / {args.run_count} ================")
+
+        # Tampilkan konfigurasi run
+        print("Konfigurasi Run:")
+        print(f"  - Algoritma             : {args.algoritma}")
+        if args.algoritma == 'hc':
+            print(f"  - Varian HC             : {args.hc_variant}")
+        print(f"  - Data File             : {args.data_file}")
+        print(f"  - Initial State         : {args.initial_state_method}")
+        if args.algoritma == 'ga':
+            max_generasi = args.max_generasi if args.max_generasi is not None else args.max_iter
+            print(f"  - Generasi Maks         : {max_generasi}")
+            print(f"  - Ukuran Populasi       : {args.populasi_size}")
+        else:
+            print(f"  - Iterasi Maks          : {args.max_iter}")
+        if args.seed is not None:
+            print(f"  - Seed                  : {args.seed}")
+        print(f"  - Constraint Rapuh      : {'Aktif' if args.enable_fragile else 'Tidak Aktif'}")
+        print(f"  - Constraint Inkompatibel : {'Aktif' if args.enable_incompatible else 'Tidak Aktif'}")
+        print("--------------------------------------")
+
         
         rng_for_initial_state = random.Random(args.seed) if args.seed is not None else random.Random()
         if args.initial_state_method == 'random':
@@ -209,24 +270,59 @@ def main():
             ]
             writer.writerow(row_data)
 
-        # Buat dan Simpan Plot
-        plot_filename_base = f"{full_algo_name}_{os.path.splitext(os.path.basename(args.data_file))[0]}_run{run_id}_{run_timestamp}.png"
-        plot_title = f"Progres Skor: {full_algo_name.upper()} pada {os.path.basename(args.data_file)} (Run {run_id})"
+        # String parameter untuk nama file dan judul
+        param_parts = [args.initial_state_method]
+        if args.algoritma == 'sa':
+            param_parts.append(f"temp{args.suhu_awal}")
+            param_parts.append(f"cool{args.cooling_rate}")
+        elif args.algoritma == 'ga':
+            max_generasi = args.max_generasi if args.max_generasi is not None else args.max_iter
+            param_parts.append(f"pop{args.populasi_size}")
+            param_parts.append(f"gen{max_generasi}")
+        elif args.algoritma == 'hc':
+            if args.hc_variant == 'sideways':
+                param_parts.append(f"sideways{args.max_sideways_moves}")
+            elif args.hc_variant == 'random_restart':
+                param_parts.append(f"restarts{args.num_restarts}")
+
+        if args.enable_fragile:
+            param_parts.append('fragile')
+        if args.enable_incompatible:
+            param_parts.append('incomp')
+
+        param_string_for_filename = "_".join(param_parts)
+        param_string_for_title = ", ".join(param_parts)
+
+        # Buat dan simpan plot
+        plot_filename_base = f"{full_algo_name}_{os.path.splitext(os.path.basename(args.data_file))[0]}_{param_string_for_filename}_run{run_id}_{run_timestamp}.png"
+        plot_title = f"Progres Skor: {full_algo_name.upper()} pada {os.path.basename(args.data_file)}\n(Run {run_id} - {param_string_for_title})"
 
         if args.algoritma == 'sa' and histori_probabilitas:
             plot_sa_extra(
                 score_history=histori_skor,
                 prob_history=histori_probabilitas,
                 title=plot_title,
-                filename=plot_filename_base
+                filename=plot_filename_base,
+                initial_score=skor_awal,
+                final_score=skor_akhir,
+                iterations=iterations,
+                duration=durasi
             )
         else:
             plot_progress(
                 score_history=histori_skor,
                 title=plot_title,
                 filename=plot_filename_base,
-                algorithm_name=full_algo_name.upper()
+                algorithm_name=full_algo_name.upper(),
+                initial_score=skor_awal,
+                final_score=skor_akhir,
+                iterations=iterations,
+                duration=durasi
             )
+
+        if log_file_handler:
+            sys.stdout = original_stdout
+            log_file_handler.close()
 
 if __name__ == "__main__":
     main()
