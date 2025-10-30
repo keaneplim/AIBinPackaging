@@ -1,13 +1,15 @@
 
 import argparse
+import random
 import time
-from typing import List
+from typing import List, Optional
 
 from src.core.data_structures import State, Kontainer
 from src.core.initial_state import generate_ffd_state
 from src.core.objective_function import ObjectiveConfig, calculate_objective
 from src.utils.file_parser import parse_problem
 from src.algorithms.simulated_annealing import simulated_annealing
+from src.algorithms.genetic_algorithm import genetic_algorithm
 
 def print_state_summary(state: State, title: str):
     """Mencetak ringkasan keadaan (solusi) ke konsol."""
@@ -21,7 +23,14 @@ def main():
     parser = argparse.ArgumentParser(description="AI Bin Packaging Solver")
     parser.add_argument("--algoritma", type=str, required=True, choices=['sa', 'hc', 'ga'], help="Algoritma yang akan dijalankan.")
     parser.add_argument("--data_file", type=str, required=True, help="Path ke file data JSON.")
-    parser.add_argument("--max_iter", type=int, default=1000, help="Jumlah iterasi maksimum.")
+    parser.add_argument("--max_iter", type=int, default=1000, help="Jumlah iterasi maksimum (SA / fallback GA).")
+    parser.add_argument("--max_generasi", type=int, default=None, help="Jumlah generasi maksimum untuk GA.")
+    parser.add_argument("--populasi_size", type=int, default=30, help="Ukuran populasi untuk GA.")
+    parser.add_argument("--crossover_rate", type=float, default=0.8, help="Peluang crossover untuk GA.")
+    parser.add_argument("--mutation_rate", type=float, default=0.2, help="Peluang mutasi untuk GA.")
+    parser.add_argument("--tournament_size", type=int, default=3, help="Ukuran turnamen seleksi GA.")
+    parser.add_argument("--elitism", type=int, default=1, help="Jumlah individu elit yang dipertahankan GA.")
+    parser.add_argument("--seed", type=int, default=None, help="Seed RNG (opsional) untuk replikasi hasil.")
     parser.add_argument("--run_count", type=int, default=1, help="Jumlah eksekusi per skenario.")
     
     parser.add_argument("--suhu_awal", type=float, default=1000.0, help="Suhu awal untuk SA.")
@@ -55,6 +64,7 @@ def main():
         print(f"Skor Awal: {skor_awal}")
 
         start_time = time.time()
+        rng = random.Random(args.seed) if args.seed is not None else None
         if args.algoritma == 'sa':
             keadaan_akhir, histori_skor, histori_probabilitas = simulated_annealing(
                 keadaan_awal=keadaan_awal,
@@ -67,8 +77,20 @@ def main():
             print("\nAlgoritma Hill Climbing belum diimplementasikan di main.py")
             return
         elif args.algoritma == 'ga':
-            print("\nAlgoritma Genetic Algorithm belum diimplementasikan di main.py")
-            return
+            max_generasi = args.max_generasi if args.max_generasi is not None else args.max_iter
+            keadaan_akhir, histori_skor = genetic_algorithm(
+                initial_state=keadaan_awal,
+                config=obj_config,
+                kapasitas_kontainer=container_capacity,
+                max_generations=max_generasi,
+                population_size=args.populasi_size,
+                crossover_rate=args.crossover_rate,
+                mutation_rate=args.mutation_rate,
+                tournament_size=args.tournament_size,
+                elitism=args.elitism,
+                rng=rng,
+            )
+            histori_probabilitas: Optional[List[float]] = None
         else:
             print(f"Algoritma '{args.algoritma}' tidak dikenal.")
             return
@@ -81,14 +103,6 @@ def main():
         print_state_summary(keadaan_akhir, "Keadaan Akhir")
         print(f"Skor Akhir: {skor_akhir}")
         print(f"Durasi Eksekusi: {durasi:.4f} detik")
-
-        # Simpan Hasil (Placeholder)
-        # TODO: Simpan hasil ke file CSV
-
-        # Buat Plot (Placeholder)
-        # plot_filename = f"plot_{args.algoritma}_{i+1}.png"
-        # plot_progress(histori_skor, title=f"Run {i+1}: {args.algoritma}", filename=plot_filename)
-        # print(f"\nPlot disimpan ke {plot_filename}")
 
         # Jika SA, buat plot probabilitas (Placeholder)
         if args.algoritma == 'sa':
