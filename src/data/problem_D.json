@@ -1,0 +1,24 @@
+{
+  "kapasitas_kontainer": 60,
+  "barang": [
+    { "id": "BRG301", "ukuran": 45, "tipe": "makanan" },
+    { "id": "BRG302", "ukuran": 38, "tipe": "kimia" },
+    { "id": "BRG303", "ukuran": 30, "tipe": "pakaian" },
+    { "id": "BRG304", "ukuran": 28, "tipe": "buku" },
+    { "id": "BRG305", "ukuran": 26, "tipe": "elektronik" },
+    { "id": "BRG306", "ukuran": 24, "tipe": "pakaian" },
+    { "id": "BRG307", "ukuran": 22, "tipe": "makanan" },
+    { "id": "BRG308", "ukuran": 20, "tipe": "perabot" },
+    { "id": "BRG309", "ukuran": 18, "tipe": "obat" },
+    { "id": "BRG310", "ukuran": 16, "tipe": "buku" },
+    { "id": "BRG311", "ukuran": 14, "tipe": "elektronik" },
+    { "id": "BRG312", "ukuran": 12, "tipe": "pakaian" },
+    { "id": "BRG313", "ukuran": 10, "tipe": "makanan" },
+    { "id": "BRG314", "ukuran": 8, "tipe": "kimia" },
+    { "id": "BRG315", "ukuran": 6, "tipe": "buku" },
+    { "id": "BRG316", "ukuran": 4, "tipe": "perabot" },
+    { "id": "BRG317", "ukuran": 3, "tipe": "obat" },
+    { "id": "BRG318", "ukuran": 2, "tipe": "pakaian" },
+    { "id": "BRG319", "ukuran": 1, "tipe": "elektronik" }
+  ]
+}
