@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from src.core.data_structures import Barang, Kontainer, State
 from src.core.objective_function import ObjectiveConfig, calculate_objective
+from src.core.initial_state import generate_random_state
+from src.utils.state_utils import renumber_container_ids, extract_all_items, resolve_capacity
 
 
 def genetic_algorithm(
@@ -48,16 +50,16 @@ def genetic_algorithm(
         raise ValueError("elitism tidak boleh negatif.")
 
     rng = rng or random.Random()
-    items = _extract_all_items(initial_state)
+    items = extract_all_items(initial_state)
     if not items:
         base_score = calculate_objective(initial_state, config)
         return initial_state.salin(), [base_score]
 
-    kapasitas = _resolve_capacity(initial_state, kapasitas_kontainer)
+    kapasitas = resolve_capacity(initial_state, kapasitas_kontainer)
 
     population: List[State] = [initial_state.salin()]
     while len(population) < population_size:
-        population.append(_generate_random_state(items, kapasitas, rng))
+        population.append(generate_random_state(items, kapasitas, rng))
 
     scores = [calculate_objective(individu, config) for individu in population]
     best_idx = min(range(len(population)), key=lambda idx: scores[idx])
@@ -104,48 +106,8 @@ def genetic_algorithm(
     return best_state, history
 
 
-def _extract_all_items(state: State) -> List[Barang]:
-    # Mengumpulkan seluruh barang dari kontainer maupun yang belum dialokasikan.
-    items: List[Barang] = []
-    seen: set[str] = set()
-    for kontainer in state.kontainer_list:
-        for barang in kontainer.barang_di_dalam:
-            if barang.id not in seen:
-                seen.add(barang.id)
-                items.append(barang)
-    for barang in state.barang_belum_dialokasi:
-        if barang.id not in seen:
-            seen.add(barang.id)
-            items.append(barang)
-    return items
 
 
-def _resolve_capacity(state: State, kapasitas_override: Optional[int]) -> int:
-    if kapasitas_override is not None:
-        return kapasitas_override
-    for kontainer in state.kontainer_list:
-        return kontainer.kapasitas
-    raise ValueError("kapasitas_kontainer harus diberikan jika state awal tidak memiliki kontainer.")
-
-
-def _generate_random_state(items: Sequence[Barang], kapasitas: int, rng: random.Random) -> State:
-    kontainer_list: List[Kontainer] = []
-    for barang in rng.sample(list(items), len(items)):
-        if not kontainer_list:
-            kontainer_list.append(Kontainer(id=0, kapasitas=kapasitas, barang_di_dalam=[barang]))
-            continue
-        kandidat = rng.sample(kontainer_list, len(kontainer_list))
-        ditempatkan = False
-        for kontainer in kandidat:
-            if kontainer.bisa_tambah_barang(barang):
-                kontainer.barang_di_dalam.append(barang)
-                ditempatkan = True
-                break
-        if not ditempatkan:
-            kontainer_baru = Kontainer(id=len(kontainer_list), kapasitas=kapasitas, barang_di_dalam=[barang])
-            kontainer_list.append(kontainer_baru)
-    _renumber_container_ids(kontainer_list)
-    return State(kontainer_list=kontainer_list, barang_belum_dialokasi=[])
 
 
 def _tournament_selection(
@@ -223,9 +185,8 @@ def _build_state_from_assignment(
                 kontainer = Kontainer(id=len(kontainer_list), kapasitas=kapasitas, barang_di_dalam=[barang])
         kontainer_list.append(kontainer)
 
-    _renumber_container_ids(kontainer_list)
+    renumber_container_ids(kontainer_list)
     return State(kontainer_list=kontainer_list, barang_belum_dialokasi=[])
-
 
 def _mutate_state(state: State, kapasitas: int, rng: random.Random) -> None:
     if not state.kontainer_list:
@@ -273,12 +234,8 @@ def _mutate_state(state: State, kapasitas: int, rng: random.Random) -> None:
 
 def _remove_empty_and_renumber(state: State) -> None:
     state.kontainer_list = [k for k in state.kontainer_list if k.barang_di_dalam]
-    _renumber_container_ids(state.kontainer_list)
+    renumber_container_ids(state.kontainer_list)
 
-
-def _renumber_container_ids(kontainer_list: List[Kontainer]) -> None:
-    for idx, kontainer in enumerate(kontainer_list):
-        kontainer.id = idx
 
 
 def _top_indices(scores: Sequence[float], jumlah: int) -> List[int]:

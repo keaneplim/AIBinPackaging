@@ -34,18 +34,16 @@ class TestCoreComponents(unittest.TestCase):
         barang_list, kapasitas = parse_problem(file_path)
 
         self.assertEqual(kapasitas, 100)
-        self.assertEqual(len(barang_list), 3)
+        self.assertEqual(len(barang_list), 12)
         # Verifikasi barang pertama
         item1 = barang_list[0]
         self.assertEqual(item1.id, 'BRG001')
-        self.assertEqual(item1.ukuran, 40)
-        self.assertEqual(item1.tipe, 'elektronik')
-        self.assertTrue(item1.rapuh)
+        self.assertEqual(item1.ukuran, 81)
+        self.assertEqual(item1.tipe, 'makanan')
+        self.assertFalse(item1.rapuh)
 
     def test_ffd_state_generator(self):
         # Mengecek generator keadaan awal menggunakan heuristik First Fit Decreasing
-        # Barang: B02(80), B01(30), B03(20)
-        # FFD: C1=[B02, B03], C2=[B01]
         barang_list = [Barang('B01', 30), Barang('B02', 80), Barang('B03', 20)]
         state = generate_ffd_state(barang_list, kapasitas_kontainer=100)
         
